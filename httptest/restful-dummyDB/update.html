@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>User Update</title>
+<script type="text/javascript">
+	function update() {
+		form.method='post';
+		form.action='/update/'+form.id.value;
+		form.submit();
+	}
+</script>
+</head>
+<body>
+<form name="form" id="form" action="/user">
+	<input type="hidden" name="id" value='<%=id%>'/>
+	<table style="width:100%;" border="1">
+		<tr>
+			<th>name</th>
+			<td><input name="name" value='<%=name%>'/></td>
+		</tr>
+		<tr>
+			<th>region</th>
+			<td><input name="region" value='<%=region%>'></td>
+		</tr>
+	</table>
+	<input type="button" value="수정" onclick="javascript:update();"/>
+</form>
+</body>
+</html>

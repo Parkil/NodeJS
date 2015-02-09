@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>사용자 리스트</title>
+<script type="text/javascript">
+	function insertView() {
+		document.dummyForm.action = "/user";
+		document.dummyForm.method = "get";
+		document.dummyForm.submit();
+	}
+	
+	function articleView(id) {
+		document.dummyForm.action = "/user/"+id;
+		document.dummyForm.method = "get";
+		document.dummyForm.submit();
+	}
+</script>
+</head>
+<body>
+	
+	<h1>List Page</h1>
+	<a href="javascript:insertView();">Insert User</a>
+	<form name="dummyForm" id="dummyForm"></form>
+	<table style="width:100%;" border="1">
+		<colgroup>
+			<col style="width:40%"/>
+			<col style="width:60%"/>
+		</colgroup>
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Region</th>
+			</tr>
+		</thead>
+		<tbody>
+			<%data.forEach(function(item, index) {%>
+				<tr>
+					<td><a href="javascript:articleView('<%=item.id%>')"><%=item.name%></a></td>
+					<td><%=item.region%></td>
+				</tr>
+			<%});%>
+		</tbody>
+	</table>
+</body>
+</html>

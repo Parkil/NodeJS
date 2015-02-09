@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>View</title>
+<script type="text/javascript">
+	function returnList() {
+		document.viewForm.action="/";
+		document.viewForm.submit();
+	};
+	
+	function updateView() {
+		document.viewForm.action="/user";
+		document.viewForm.submit();
+	}
+	
+	function del() {
+		document.viewForm.action="/delete/"+document.viewForm.id.value;
+		document.viewForm.method = 'post';
+		document.viewForm.submit();
+	}
+</script>
+</head>
+<body>
+	<form name="viewForm" id="viewForm" method="get">
+		<input type="hidden" id="id" name="id" value="<%=id%>"/>
+		<input type="hidden" id="name" name="name" value="<%=value.name%>"/>
+		<input type="hidden" id="region" name="region" value="<%=value.region%>"/>
+	</form>
+	<table style="width:100%;" border="1">
+		<tr>
+			<th>name</th>
+			<td> <%=value.name%></td>
+		</tr>
+		<tr>
+			<th>region</th>
+			<td> <%=value.region%></td>
+		</tr>
+	</table>
+	<input type="button" value="리스트" onclick="javascript:returnList();"/>
+	<input type="button" value="수정" onclick="javascript:updateView();"/>
+	<input type="button" value="삭제" onclick="javascript:del();"/>
+</body>
+</html>		
