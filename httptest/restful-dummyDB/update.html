@@ -3,16 +3,91 @@
 <head>
 <meta charset="utf-8">
 <title>User Update</title>
-<script type="text/javascript">
-	function update() {
-		form.method='post';
-		form.action='/update/'+form.id.value;
+<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script defer type="text/javascript">
+	/*
+	기본적으로 웹 브라우저가 외부 자바스크립트를 불러오는 일반 script 태그를 만나게 되면, 우선 해당 스크립트를 내려받아 해석하고 실행(execute)할 때까지 웹 문서의 HTML 코드 parsing 작업을 잠시 뒤로 미룬다.
+	때문에 용량이 큰 스크립트를 만나게 되면 로딩속도가 느려지는 경우가 있고 또하나의 문제는 다음과 같이 전역변수로 html에 접근을 하게 되면 html이 해석전이기 때문에 undefined로 인식이 되는 문제가 있다.
+	단일 페이지의 경우에는 단순히 해당 스크립트를 html 밑으로 내리면 되지만 tiles같이 여러개의 html이 동적으로 실행되는 경우에는 문제가 있을수 있다. 이런경우에는 어떻게 처리하는지 확인이 필요함
+	html5에는 defer를 쓰면 되지만 html4 이전에서는 다른 방법이 필요한듯
+	*/
+	console.log($("#form").attr("id"));
+	
+	/*
+		form에서 put,delete 메소드를 지정하여 form submit을 하는 방법에는 여러가지가 있으며 그중
+		몇가지를 아래에 구현한다.
+	*/
+	
+	/*
+		XMLHttpRequest를 사용하는 방법
+		XMLHttpRequest.send시 form데이터를 queryString으로 변환하여 파라메터로 입력하고(여기서는 Jquery serialize이용)
+		status가 200일경우(정상작동) redirect를 시킨다.
+	*/
+	function update1() {
+		var form_url = '/user/'+$("#form").attr("id");
+		var query_str = $("#form").serialize();
+		
+		var xhr = null;
+		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+			xhr = new XMLHttpRequest();
+		} else {// code for IE6, IE5
+			xhr = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		
+		/*
+			일반적인 mime-type이 아닌 form에 사용되는 Content-type은 2가지가 있다.
+			1.application/x-www-form-urlencoded(표준)
+			2.multipart/form-data(대량의 binary 데이터를 전송할때 사용 - 보통 파일 업로드시 사용)
+		*/
+		xhr.open('PUT', form_url, false);
+		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		xhr.send(query_str);
+		
+		if(xhr.status == 200) {
+			location.href="/";
+		}else {
+			alert("수정중 오류가 발생하였습니다.");
+		}
+	}
+	
+	/*
+		jquery ajax를 이용하는 방법
+	*/
+	function update2() {
+		var form_url = '/user/'+form.id.value;
+		var query_str = $("#form").serialize();
+		
+		$.ajax({
+			url : form_url,
+			data : query_str,
+			type : 'put',
+			datatype : 'json',
+			success : function(data, textStatus, xhr) {
+				location.href="/";
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				alert("수정중 오류가 발생하였습니다.");
+			}
+		});
+	}
+	
+	/*
+		nodejs의  method-override를 이용하여 put,delete를 처리하는 방법
+		HTML에서는 form에 enctype="application/x-www-form-urlencoded"을 지정해 주어야 하고 
+		form 안에 <input type="hidden" name="_method" id="_method" value="PUT"/> 같이 _method 변수에 put,delete같은 
+		method를 지정해 주어야 한다.
+	*/
+	function update3() {
+		var form_url = '/user/'+form.id.value;
+		
+		form.action = form_url;
 		form.submit();
 	}
 </script>
 </head>
 <body>
-<form name="form" id="form" action="/user">
+<form name="form" id="form" action="/user" method="post" enctype="application/x-www-form-urlencoded">
+	<input type="hidden" name="_method" id="_method" value="PUT"/>
 	<input type="hidden" name="id" value='<%=id%>'/>
 	<table style="width:100%;" border="1">
 		<tr>
@@ -24,7 +99,7 @@
 			<td><input name="region" value='<%=region%>'></td>
 		</tr>
 	</table>
-	<input type="button" value="수정" onclick="javascript:update();"/>
+	<input type="button" value="수정" onclick="javascript:update3();"/>
 </form>
 </body>
 </html>

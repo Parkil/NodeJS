@@ -12,6 +12,7 @@
 var fs		= require('fs');
 var http	= require('http');
 var express = require('c:/Dev/language/nodejs/node_modules/express');
+var methodOverride = require('c:/Dev/language/nodejs/node_modules/method-override'); //form에서  put,delete를 처리하기 위해 사용
 var logger	= require('c:/Dev/language/nodejs/node_modules/custom-logger').config({level : 0});
 
 var bodyparser	= require('c:/Dev/language/nodejs/node_modules/body-parser');
@@ -23,9 +24,29 @@ var ejs		= require('c:/Dev/language/nodejs/node_modules/ejs');
 
 var app = express();
 
-app.set('case sensitive routes', false);
+
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.raw());
+app.set('case sensitive routes', true);
+
+/*
+ * 원래 methodOverride는 다음과 같이 지정한다 
+	app.use(methodOverride('X-HTTP-Method'))          // Microsoft 
+	app.use(methodOverride('X-HTTP-Method-Override')) // Google/GData 
+	app.use(methodOverride('X-Method-Override'))      // IBM 
+ * 
+ * 그런데 헤더별로 다르게 overriding을 해야 하기 때문에 어떠한 헤더가 넘어와도 처리할 수  있도록
+ * 다음과 같이 function으로 지정한다.
+ */
+app.use(methodOverride(function(req, res){
+	if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+		// look in urlencoded POST bodies and delete it 
+		var method = req.body._method;
+		delete req.body._method;
+		return method;
+	}
+}));
+
 //app.use(bodyparser.text());
 //app.use(bodyparser.json());
 
@@ -86,7 +107,7 @@ app.get("/user/:id", function(request,response) {
 });
 
 //update
-app.post("/update/:id", function(request,response) {
+app.put("/user/:id", function(request,response) {
 	var id = request.param('id');
 	var name	= request.param('name');
 	var region	= request.param('region');
@@ -100,40 +121,15 @@ app.post("/update/:id", function(request,response) {
 });
 
 //delete
-app.post("/delete/:id", function(request,response) {
-	var id = request.param('id');
-	
-	var result = db.remove(id);
-	
-	response.redirect("/");
-	//response.send(result);
-});
-
-/*
- * Html에서는 form에서 더이상 PUT / DELETE를 지원하지 않음(http://www.w3.org/TR/2010/WD-html5-diff-20101019/#changes-2010-06-24 참고)
- * 아래 app.put / app.delet는 Chrome postman용 예제임
- * 
- */
-//update
-app.put("/user/:id", function(request,response) {
-	var id = request.param('id');
-	var name	= request.param('name');
-	var region	= request.param('region');
-	
-	var value = db.get(id);
-	value.name = name;
-	value.region = region;
-	
-	response.send(value);
-});
-
-//delete
 app.del("/user/:id", function(request,response) {
 	var id = request.param('id');
 	
 	var result = db.remove(id);
 	
-	response.send(result);
+	if(result) {
+		response.redirect("/");
+	}
+	//response.send(result);
 });
 
 /*

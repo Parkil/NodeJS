@@ -11,18 +11,20 @@
 	
 	function updateView() {
 		document.viewForm.action="/user";
+		document.viewForm.method="get";
 		document.viewForm.submit();
 	}
 	
 	function del() {
-		document.viewForm.action="/delete/"+document.viewForm.id.value;
-		document.viewForm.method = 'post';
+		document.viewForm.action="/user/"+document.viewForm.id.value;
+		document.viewForm.method="post";
 		document.viewForm.submit();
 	}
 </script>
 </head>
 <body>
-	<form name="viewForm" id="viewForm" method="get">
+	<form name="viewForm" id="viewForm" enctype="application/x-www-form-urlencoded">
+		<input type="hidden" name="_method" id="_method" value="DELETE"/>
 		<input type="hidden" id="id" name="id" value="<%=id%>"/>
 		<input type="hidden" id="name" name="name" value="<%=value.name%>"/>
 		<input type="hidden" id="region" name="region" value="<%=value.region%>"/>
