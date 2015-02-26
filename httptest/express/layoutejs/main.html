@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>메인화면</title>
+</head>
+<body>
+	<header>
+		<%include header.html%>
+	</header>
+	
+	<div>
+		<table border="1">
+			<thead>
+				<colgroup>
+					<col width="50%"/>
+					<col width="50%"/>
+				</colgroup>
+			</thead>
+			
+			<tbody>
+				<tr>
+					<td>
+						<%include left.html%>
+					</td>
+					<td>
+						<%-body%>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+	<footer>
+		<%include footer.html%>
+	</footer>
+</body>
+</html>
