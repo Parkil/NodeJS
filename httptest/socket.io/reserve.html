@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+		var socket = io.connect();
+		
+		socket.on('reserve', function(data) {
+			var $target = $('div[data-x='+data.x+'][data-y='+data.y+']');
+			$target.removeClass('enable');
+			$target.addClass('disable');
+		});
+		
+		//좌석 예매
+		var onClickSeat = function() {
+			var x = $(this).attr('data-x');
+			var y = $(this).attr('data-y');
+			
+			if(confirm('좌석을 예매하시겠습니까?')) {
+				$(this).off('click');
+				socket.emit('reserve', {
+					x: x,
+					y: y
+				});
+			}else {
+				alert('예매가 취소되었습니다.');
+				return;
+			}
+		}
+		
+		//Ajax를 이용하여 좌석데이터 표출
+		$.getJSON('/seats', {dummy : new Date().getTime()}, function(data) {
+			
+			/*
+				data(실제 데이터)의 데이터 위치 1차,2차....를 function 파라메터 위치에 따라서 mapping이 되는것이고 변수명은 
+				사용자가 입력한것에 지나지 않는다
+			*/
+			$.each(data, function(a,b) {
+				console.log(b);
+			});
+			
+			
+			$.each(data, function(indexY, line) {
+				var $line = $('<div></div>').addClass('line');
+				
+				$.each(line, function(indexX, seat) {
+					var $output = $('<div></div>', {
+						'class' : 'seat',
+						'data-x' : indexX,
+						'data-y' : indexY
+					}).appendTo($line);
+					
+					if(seat == 1) {
+						$output.addClass('enable').on('click', onClickSeat);
+					}else if(seat == 2) {
+						$output.addClass('disable');
+					}
+				});
+				
+				$line.appendTo('body');
+			});
+
+		});
+	});
+</script>
+<title>NodeJs Websocket Test</title>
+<style>
+	.line{overflow:hidden;}
+	.seat {
+		margin:2px; float:left;
+		width:30px; height:30px;
+		border-radius:3px;
+	}
+	
+	.enable {background:gray;}
+	.enable:hover {background:black;}
+	.disable {background:red;}
+</style>
+</head>
+<body>
+</body>
+</html>

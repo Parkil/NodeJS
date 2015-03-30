@@ -6,46 +6,91 @@ var socketio = require('c:/Dev/language/nodejs/node_modules/socket.io');
 var http 	 = require('http');
 var fs		 = require('fs');
 var logger	 = require('c:/Dev/language/nodejs/node_modules/custom-logger').config({level : 0});
+var express	 = require('c:/Dev/language/nodejs/node_modules/express');
+var ejs		 = require('c:/Dev/language/nodejs/node_modules/ejs');
 
-var server = http.createServer(function(request,response) {
-	fs.readFile('test.html', function(error, data) {
-		response.writeHead(200, {'Content-Type' : 'text/html'});
-		response.end(data);
-	});
-}).listen(9001, function() {
-	logger.info('Server Start');
+var counter = 0;
+
+//개별 상품 저장 구조
+function Product(name, image, price, count) {
+	this.index	= counter++;
+	this.name	= name;
+	this.price	= price;
+	this.count	= count;
+}
+
+//전체상품목록
+var Products = [
+                new Product('JavaScript', 'chrome.png', 28000,30),
+                new Product('jQuery'	, 'chrome.png', 28000,30),
+                new Product('node.js'	, 'chrome.png', 32000,30),
+                new Product('Socket.io'	, 'chrome.png', 17000,30),
+                new Product('Connect'	, 'chrome.png', 18000,30),
+                new Product('Express'	, 'chrome.png', 31000,30),
+                new Product('EJS'		, 'chrome.png', 12000,30),
+                ];
+
+var app = express();
+var server = http.createServer(app).listen(9001, function(){logger.info('Server Started port 9001');});
+
+//이미지 저장 폴더
+app.use(express.static('public',__dirname + 'public'));
+
+app.get('/', function(request,response) {
+	var html = fs.readFileSync('test.html', 'utf-8');
+	
+	response.send(ejs.render(html, {
+		products : Products
+	}));
 });
 
-//websocket 서버 생성
-var io = socketio.listen(server);
 
-/*
- * websocket 이벤트 설정
- * emit : 이벤트 발생
- * on   : emit으로 발생한 이벤트 처리
- */
+//websocket
+var io= socketio.listen(server);
 
-/*
- * public	 : 자기 자신을 포함한 모든 client에게 이벤트 처리 ex) io.emit('echo', data);
- * broadcast : 자신을 제외한 나머지 client에게 이벤트 처리 ex) c_socket.broadcast.emit('echo', data);
- * private	 : 특정 클라이언트에게만 전송 ex)io.sockets.in(ttt).emit('echo',data); //ttt는 socket.id임
- */
-var ttt = 0;
-io.sockets.on('connection', function(c_socket) {
-	logger.info('web socket connected by client');
-	if(ttt == 0) {
-		ttt = c_socket.id;
+io.sockets.on('connection', function(socket) {
+	function onReturn(index) {
+		Products[index].count++;
+		
+		clearTimeout(cart[index].timerID);
+		
+		delete cart[index];
+		
+		io.sockets.emit('count', {
+			index : index,
+			count : Products[index].count
+		});
 	}
 	
-	logger.info(io.sockets.clients());
-	//logger.info(io.sockets[ttt].toString());
+	var cart = {};
 	
-	c_socket.on('recv', function(data) {
-		logger.info('receive massage from client : '+data);
-		io.sockets.in(ttt).emit('echo',data);
-		//c_socket.broadcast.emit('echo', data);
-		logger.info('echoing...');
+	socket.on('cart', function(index) {
+		Products[index].count--;
+		
+		cart[index] = {};
+		cart[index].index = index;
+		cart[index].timerID = setTimeout(function() {
+			onReturn(index);
+		}, 1000*60*60); //장바구니 제한시간 설정
+		
+		io.sockets.emit('count', {
+			index : index,
+			count : Products[index].count
+		});
+	});
+	
+	socket.on('buy', function(index) {
+		clearTimeout(cart[index].timerID);
+		
+		delete cart[index];
+		
+		io.sockets.emit('count', {
+			index : index,
+			count : Products[index].count
+		});
+	});
+	
+	socket.on('return', function(index) {
+		onReturn(index);
 	});
 });
-
-
