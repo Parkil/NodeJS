@@ -1,5 +1,5 @@
 /*
- * flatiron framework 예제
+ * flatiron framework 예제(plates, router)
  * 
  * flatiron.union : nodejs.http와 비슷한 역할을 하는듯
  */
